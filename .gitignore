@@ -1,0 +1,44 @@
+## Build
+build/
+build/
+*.xcarchive
+*.ipa
+*.dSYM.zip
+*.dSYM
+DerivedData/
+
+## Xcode
+*.xcodeproj/
+!project.pbxproj
+*.xcworkspace/
+xcuserdata/
+*.xcuserdatamodel/
+*.xcuserstate
+
+## Swift Package
+.swiftpm/
+Package.resolved
+
+## Fastlane
+Fastlane/report.xml
+Fastlane/Preview.html
+Fastlane/screenshots/
+Fastlane/test_output/
+
+## macOS
+.DS_Store
+._*
+
+## Logs
+*.log
+
+## Sensitive
+*.p12
+*.mobileprovision
+*.cer
+*.key
+
+## Local config
+.env
+.env.local
+DEVELOPER_TEAM_ID

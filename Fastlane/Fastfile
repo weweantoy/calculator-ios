@@ -1,0 +1,70 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Generate Xcode project"
+  lane :generate do
+    sh "cd .. && xcodegen generate"
+  end
+
+  desc "Run unit tests"
+  lane :test do
+    sh "cd .. && swift test"
+  end
+
+  desc "Build unsigned IPA for distribution"
+  lane :build_ipa do
+    generate
+    build_mac_app(
+      project: "Calculator.xcodeproj",
+      scheme: "Calculator",
+      configuration: "Release",
+      skip_codesigning: true,
+      skip_package_pkg: true,
+      output_directory: "./build",
+      export_method: "ad-hoc"
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    generate
+    build_mac_app(
+      project: "Calculator.xcodeproj",
+      scheme: "Calculator",
+      configuration: "Release",
+      skip_package_pkg: true,
+      output_directory: "./build",
+      export_method: "app-store"
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build and upload to App Store"
+  lane :release do
+    generate
+    build_mac_app(
+      project: "Calculator.xcodeproj",
+      scheme: "Calculator",
+      configuration: "Release",
+      skip_package_pkg: true,
+      output_directory: "./build",
+      export_method: "app-store"
+    )
+    upload_to_app_store(
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: false,
+      submit_for_review: true
+    )
+  end
+
+  desc "Increment build number"
+  lane :bump do
+    increment_build_number_in_xcodeproj(
+      xcodeproj: "Calculator.xcodeproj"
+    )
+  end
+end

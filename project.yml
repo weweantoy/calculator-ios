@@ -1,0 +1,168 @@
+name: Calculator
+options:
+  bundleIdPrefix: com.workbuddy.calc
+  deploymentTarget:
+    iOS: "17.0"
+    watchOS: "10.0"
+  createIntermediateGroups: true
+  developmentLanguage: zh-Hans
+  groupSortPosition: top
+  generateEmptyDirectories: true
+  defaultConfig: Debug
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    WATCHOS_DEPLOYMENT_TARGET: "10.0"
+    DEVELOPMENT_TEAM: ""                # 占位：替换为你自己的 Apple Developer Team ID
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "Apple Development"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+    GCC_TREAT_WARNINGS_AS_ERRORS: NO
+    ENABLE_BITCODE: NO
+    TARGETED_DEVICE_FAMILY: "1,2"        # iPhone + iPad
+    SWIFT_STRICT_CONCURRENCY: minimal
+  configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: -Onone
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: -O
+      SWIFT_COMPILATION_MODE: wholemodule
+
+# 把 Swift Package 当成本地依赖
+packages:
+  CalculatorCore:
+    path: .
+
+targets:
+  # ============ 1. 主 iOS App ============
+  CalculatorApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+        excludes:
+          - "Resources/Info.plist"
+          - "Resources/CalculatorApp.entitlements"
+    resources:
+      - path: App/Resources/Assets.xcassets
+      - path: App/Resources/zh_CN.lproj
+      - path: App/Resources/en.lproj
+    info:
+      path: App/Resources/Info.plist
+    entitlements:
+      path: App/Resources/CalculatorApp.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc
+        INFOPLIST_FILE: App/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/Resources/CalculatorApp.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.0"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        ENABLE_PREVIEWS: YES
+    dependencies:
+      - package: CalculatorCore
+      - sdk: WidgetExtension.framework
+        embed: true
+        codeSign: true
+      - sdk: WatchApp.app
+        embed: true
+        codeSign: true
+    scheme:
+      testTargets:
+        - CalculatorAppUITests
+      gatherCoverageData: true
+      environmentVariables:
+        - variable: OS_ACTIVITY_MODE
+          value: disable
+
+  CalculatorAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.uitests
+        TEST_TARGET_NAME: CalculatorApp
+
+  # ============ 2. Watch App（独立 Bundle，嵌到主 App 中）============
+  WatchApp:
+    type: application
+    platform: watchOS
+    sources:
+      - path: WatchApp/WatchApp
+        excludes:
+          - "Info.plist"
+          - "WatchApp.entitlements"
+    resources:
+      - path: WatchApp/WatchApp/Assets.xcassets
+    info:
+      path: WatchApp/WatchApp/Info.plist
+    entitlements:
+      path: WatchApp/WatchApp/WatchApp.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.watchkitapp
+        INFOPLIST_FILE: WatchApp/WatchApp/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WatchApp/WatchApp/WatchApp.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+        WATCHOS_DEPLOYMENT_TARGET: "10.0"
+        TARGETED_DEVICE_FAMILY: "4"      # Apple Watch
+    dependencies:
+      - package: CalculatorCore
+
+  # ============ 3. Widget Extension ============
+  WidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: WidgetExtension/WidgetExtension
+        excludes:
+          - "Info.plist"
+          - "WidgetExtension.entitlements"
+    resources:
+      - path: WidgetExtension/WidgetExtension/Assets.xcassets
+    info:
+      path: WidgetExtension/WidgetExtension/Info.plist
+    entitlements:
+      path: WidgetExtension/WidgetExtension/WidgetExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.widget
+        INFOPLIST_FILE: WidgetExtension/WidgetExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WidgetExtension/WidgetExtension/WidgetExtension.entitlements
+        SKIP_INSTALL: YES
+        ENABLE_BITCODE: NO
+    dependencies:
+      - package: CalculatorCore
+      - sdk: SwiftUI.framework
+      - sdk: WidgetKit.framework
+
+schemes:
+  Calculator:
+    build:
+      targets:
+        CalculatorApp: all
+        WidgetExtension: all
+        WatchApp: all
+        CalculatorCore: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - CalculatorAppUITests
+    archive:
+      config: Release

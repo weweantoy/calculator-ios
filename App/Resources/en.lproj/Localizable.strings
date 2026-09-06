@@ -1,0 +1,32 @@
+/* CalculatorApp English localization
+   For Chinese version, see zh_CN.lproj/Localizable.strings
+*/
+
+// Modes
+"basic_mode" = "Basic";
+"scientific_mode" = "Scientific";
+
+// Angle units
+"degree_unit" = "Degree";
+"radian_unit" = "Radian";
+
+// History
+"history_title" = "History";
+"history_empty" = "No history yet";
+"history_clear" = "Clear";
+
+// Accessibility labels
+"key_ac" = "All clear";
+"key_delete" = "Delete";
+"key_percent" = "Percent";
+"key_sign" = "Toggle sign";
+"key_equals" = "Equals";
+
+// Error messages
+"error_division_by_zero" = "Cannot divide by zero";
+"error_invalid_input" = "Invalid input";
+"error_unknown" = "Calculation error";
+
+// Main titles
+"app_name" = "Calculator";
+"app_subtitle" = "Simple yet powerful";

@@ -1,0 +1,4 @@
+app_identifier("com.workbuddy.calc")
+apple_id("developer@workbuddy.com")  # 替换为你的 Apple ID
+team_id("ABC123XYZ")                  # 替换为你的 Team ID
+itc_team_id("123456")                 # App Store Connect Team ID（如不需可留空）

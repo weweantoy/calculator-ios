@@ -1,0 +1,32 @@
+/* CalculatorApp 本地化字符串（中英文双语）
+   英文版请复制到 en.lproj/Localizable.strings
+*/
+
+// 模式
+"basic_mode" = "基础";
+"scientific_mode" = "科学";
+
+// 角度单位
+"degree_unit" = "度";
+"radian_unit" = "弧度";
+
+// 历史记录
+"history_title" = "历史记录";
+"history_empty" = "暂无历史记录";
+"history_clear" = "清空";
+
+// 按键无障碍标签
+"key_ac" = "全部清除";
+"key_delete" = "删除";
+"key_percent" = "百分号";
+"key_sign" = "正负号切换";
+"key_equals" = "等于";
+
+// 错误信息
+"error_division_by_zero" = "除数不能为零";
+"error_invalid_input" = "无效输入";
+"error_unknown" = "计算错误";
+
+// 主标题
+"app_name" = "计算器";
+"app_subtitle" = "简洁而强大";
