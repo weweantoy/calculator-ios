@@ -72,12 +72,10 @@ targets:
         ENABLE_PREVIEWS: YES
     dependencies:
       - package: CalculatorCore
-      - sdk: WidgetExtension.framework
+      - target: WidgetExtension
         embed: true
-        codeSign: true
-      - sdk: WatchApp.app
+      - target: WatchApp
         embed: true
-        codeSign: true
     scheme:
       testTargets:
         - CalculatorAppUITests
@@ -157,7 +155,6 @@ schemes:
         CalculatorApp: all
         WidgetExtension: all
         WatchApp: all
-        CalculatorCore: all
     run:
       config: Debug
     test:
