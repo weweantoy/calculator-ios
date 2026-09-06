@@ -317,7 +317,7 @@ public final class CalculatorEngine: @unchecked Sendable {
             return v
 
         case .unary(.negate, let operand):
-            return -try evaluate(operand)
+            return -(try evaluate(operand))
 
         case .binary(let op, let left, let right):
             let l = try evaluate(left)
