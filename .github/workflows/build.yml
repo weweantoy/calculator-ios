@@ -62,13 +62,13 @@ jobs:
           # 直接从 xcarchive 中的 .app 打包成 IPA（绕过 xcodebuild exportArchive 的 Team 检查）
           # Sideloadly 安装时会用自己的签名重新签名
           mkdir -p build/Payload
-          ditto \
-            -c -k --sequesterRsrc --keepParent \
-            build/Calculator.xcarchive/Products/Applications/CalculatorApp.app \
-            build/Payload/CalculatorApp.app
+          # 先拷贝 .app（不要用 --keepParent，否则 iOS bundle 被当作单文件归档）
+          cp -R build/Calculator.xcarchive/Products/Applications/CalculatorApp.app build/Payload/
           cd build
-          # IPA 文件 = Payload 目录压缩成 zip，并改后缀为 .ipa
-          zip -qr Calculator.ipa Payload
+          # 使用 zip 递归打包 Payload 目录为 IPA
+          zip -qr Calculator.ipa Payload/
+          echo "--- IPA contents (first 20) ---"
+          unzip -l Calculator.ipa | head -25
           ls -la Calculator.ipa
 
       - name: Upload Artifact
