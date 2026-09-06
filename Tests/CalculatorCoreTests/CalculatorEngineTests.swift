@@ -61,7 +61,7 @@ final class CalculatorEngineTests: XCTestCase {
         let engine = CalculatorEngine()
         let result = try engine.evaluate("0.1+0.2")
         // Decimal 精度：0.3 精确
-        XCTAssertEqual(result, Decimal(string: "0.3"))
+        XCTAssertEqual(result, Decimal(string: "0.3")!)
     }
 
     func testNegativeNumber() throws {
@@ -114,14 +114,14 @@ final class CalculatorEngineTests: XCTestCase {
     func testPercent() throws {
         let engine = CalculatorEngine()
         let result = try engine.evaluate("50%")
-        XCTAssertEqual(result, Decimal(string: "0.5"))
+        XCTAssertEqual(result, Decimal(string: "0.5")!)
     }
 
     func testPercentInExpression() throws {
         let engine = CalculatorEngine()
         // 200 + 10% = 200 + 0.1 = 200.1
         let result = try engine.evaluate("200+10%")
-        XCTAssertEqual(result, Decimal(string: "200.1"))
+        XCTAssertEqual(result, Decimal(string: "200.1")!)
     }
 
     // MARK: - 常量
@@ -143,19 +143,19 @@ final class CalculatorEngineTests: XCTestCase {
     func testSin30Degrees() throws {
         let engine = CalculatorEngine(angleUnit: .degree)
         let result = try engine.evaluate("sin(30)")
-        XCTAssertEqual(result, Decimal(0.5), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(0.5), accuracy: Decimal(string: "0.0001")!
     }
 
     func testCos60Degrees() throws {
         let engine = CalculatorEngine(angleUnit: .degree)
         let result = try engine.evaluate("cos(60)")
-        XCTAssertEqual(result, Decimal(0.5), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(0.5), accuracy: Decimal(string: "0.0001")!
     }
 
     func testTan45Degrees() throws {
         let engine = CalculatorEngine(angleUnit: .degree)
         let result = try engine.evaluate("tan(45)")
-        XCTAssertEqual(result, Decimal(1), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(1), accuracy: Decimal(string: "0.0001")!
     }
 
     // MARK: - 科学函数（弧度模式）
@@ -163,13 +163,13 @@ final class CalculatorEngineTests: XCTestCase {
     func testSinPiOver2Radians() throws {
         let engine = CalculatorEngine(angleUnit: .radian)
         let result = try engine.evaluate("sin(pi/2)")
-        XCTAssertEqual(result, Decimal(1), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(1), accuracy: Decimal(string: "0.0001")!
     }
 
     func testCosPiRadians() throws {
         let engine = CalculatorEngine(angleUnit: .radian)
         let result = try engine.evaluate("cos(pi)")
-        XCTAssertEqual(result, Decimal(-1), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(-1), accuracy: Decimal(string: "0.0001")!
     }
 
     // MARK: - 对数
@@ -177,13 +177,13 @@ final class CalculatorEngineTests: XCTestCase {
     func testLnE() throws {
         let engine = CalculatorEngine()
         let result = try engine.evaluate("ln(e)")
-        XCTAssertEqual(result, Decimal(1), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(1), accuracy: Decimal(string: "0.0001")!
     }
 
     func testLog10() throws {
         let engine = CalculatorEngine()
         let result = try engine.evaluate("log(100)")
-        XCTAssertEqual(result, Decimal(2), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(2), accuracy: Decimal(string: "0.0001")!
     }
 
     func testLnOfNegativeThrows() {
@@ -210,14 +210,14 @@ final class CalculatorEngineTests: XCTestCase {
         let engine = CalculatorEngine(angleUnit: .degree)
         // 2 * (3 + 4) - sqrt(9) + sin(30) = 14 - 3 + 0.5 = 11.5
         let result = try engine.evaluate("2*(3+4)-sqrt(9)+sin(30)")
-        XCTAssertEqual(result, Decimal(string: "11.5"), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(string: "11.5")!, accuracy: Decimal(string: "0.0001")!
     }
 
     func testComplexExpression2() throws {
         let engine = CalculatorEngine()
         // (10 + 20) / (2 * 3) + log(100) = 5 + 2 = 7
         let result = try engine.evaluate("(10+20)/(2*3)+log(100)")
-        XCTAssertEqual(result, Decimal(7), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(result, Decimal(7), accuracy: Decimal(string: "0.0001")!
     }
 
     func testMultiplicationSymbols() throws {
@@ -252,8 +252,8 @@ final class CalculatorEngineTests: XCTestCase {
         // sin(90°) = 1, sin(π/2 rad) = 1
         let a = try engineDegree.evaluate("sin(90)")
         let b = try engineRadian.evaluate("sin(pi/2)")
-        XCTAssertEqual(a, Decimal(1), accuracy: Decimal(string: "0.0001")!)
-        XCTAssertEqual(b, Decimal(1), accuracy: Decimal(string: "0.0001")!)
+        XCTAssertEqual(a, Decimal(1), accuracy: Decimal(string: "0.0001")!
+        XCTAssertEqual(b, Decimal(1), accuracy: Decimal(string: "0.0001")!
     }
 }
 
