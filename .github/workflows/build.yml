@@ -41,22 +41,20 @@ jobs:
           sed -i '' 's/objectVersion = 77;/objectVersion = 56;/g' Calculator.xcodeproj/project.pbxproj || true
           echo "objectVersion:" $(grep objectVersion Calculator.xcodeproj/project.pbxproj | head -1)
 
-      - name: Archive (ad-hoc signed)
+      - name: Archive (unsigned)
         run: |
           mkdir -p build
-          # 使用 CODE_SIGN_IDENTITY="-" 启用 ad-hoc 签名（无需 Apple Developer 账户）
+          # Xcode 17.5 SDK 不允许 ad-hoc 签名 → 走完全 unsigned 路径
+          # Sideloadly 安装时会用自己的证书重新签名
           xcodebuild \
             -project Calculator.xcodeproj \
             -scheme Calculator \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath build/Calculator.xcarchive \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=YES \
-            CODE_SIGNING_ALLOWED=YES \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             clean archive
 
       - name: Package IPA from xcarchive
