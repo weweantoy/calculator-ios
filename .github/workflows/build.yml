@@ -35,7 +35,14 @@ jobs:
         run: brew install xcodegen
 
       - name: Generate Xcode Project
-        run: xcodegen generate
+        run: |
+          xcodegen generate
+          echo "=== project file count ==="
+          ls -la Calculator.xcodeproj/
+          echo "=== pbxproj first 80 lines ==="
+          head -80 Calculator.xcodeproj/project.pbxproj
+          echo "=== pbxproj objectVersion ==="
+          grep objectVersion Calculator.xcodeproj/project.pbxproj | head -3
 
       - name: Archive (unsigned)
         run: |
