@@ -30,6 +30,11 @@ settings:
     Release:
       SWIFT_OPTIMIZATION_LEVEL: -O
 
+# Local SPM package(s)
+packages:
+  CalculatorCore:
+    path: .
+
 targets:
   CalculatorApp:
     type: application
@@ -39,7 +44,9 @@ targets:
         excludes:
           - "Resources/Info.plist"
           - "Resources/CalculatorApp.entitlements"
-      - path: Sources/CalculatorCore
+    dependencies:
+      - package: CalculatorCore
+        product: CalculatorCore
     resources:
       - path: App/Resources/Assets.xcassets
       - path: App/Resources/zh_CN.lproj
