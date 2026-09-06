@@ -41,7 +41,7 @@ public final class AppGroupBridge {
     public func writeLatestResult(expression: String, result: Decimal) {
         let payload = CalcPayload(
             expression: expression,
-            result: NumberFormatter.format(result),
+            result: CalculatorNumberFormatter.format(result),
             timestamp: Date()
         )
         if let data = try? JSONEncoder().encode(payload),
@@ -68,7 +68,7 @@ public final class AppGroupBridge {
         history.insert(
             CalcPayload(
                 expression: expression,
-                result: NumberFormatter.format(result),
+                result: CalculatorNumberFormatter.format(result),
                 timestamp: Date()
             ),
             at: 0
