@@ -19,14 +19,13 @@ settings:
     SWIFT_VERSION: "5.9"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     WATCHOS_DEPLOYMENT_TARGET: "10.0"
-    DEVELOPMENT_TEAM: ""                # 占位：替换为你自己的 Apple Developer Team ID
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
     ENABLE_USER_SCRIPT_SANDBOXING: NO
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
     GCC_TREAT_WARNINGS_AS_ERRORS: NO
     ENABLE_BITCODE: NO
-    TARGETED_DEVICE_FAMILY: "1,2"        # iPhone + iPad
+    TARGETED_DEVICE_FAMILY: "1,2"
     SWIFT_STRICT_CONCURRENCY: minimal
   configs:
     Debug:
@@ -35,11 +34,6 @@ settings:
     Release:
       SWIFT_OPTIMIZATION_LEVEL: -O
       SWIFT_COMPILATION_MODE: wholemodule
-
-# 把 Swift Package 当成本地依赖
-packages:
-  CalculatorCore:
-    path: .
 
 targets:
   # ============ 1. 主 iOS App ============
@@ -51,6 +45,7 @@ targets:
         excludes:
           - "Resources/Info.plist"
           - "Resources/CalculatorApp.entitlements"
+      - path: Sources/CalculatorCore
     resources:
       - path: App/Resources/Assets.xcassets
       - path: App/Resources/zh_CN.lproj
@@ -71,7 +66,6 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         ENABLE_PREVIEWS: YES
     dependencies:
-      - package: CalculatorCore
       - target: WidgetExtension
         embed: true
       - target: WatchApp
@@ -94,7 +88,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.uitests
         TEST_TARGET_NAME: CalculatorApp
 
-  # ============ 2. Watch App（独立 Bundle，嵌到主 App 中）============
+  # ============ 2. Watch App ============
   WatchApp:
     type: application
     platform: watchOS
@@ -103,6 +97,7 @@ targets:
         excludes:
           - "Info.plist"
           - "WatchApp.entitlements"
+      - path: Sources/CalculatorCore
     resources:
       - path: WatchApp/WatchApp/Assets.xcassets
     info:
@@ -117,9 +112,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
-        TARGETED_DEVICE_FAMILY: "4"      # Apple Watch
-    dependencies:
-      - package: CalculatorCore
+        TARGETED_DEVICE_FAMILY: "4"
 
   # ============ 3. Widget Extension ============
   WidgetExtension:
@@ -130,6 +123,7 @@ targets:
         excludes:
           - "Info.plist"
           - "WidgetExtension.entitlements"
+      - path: Sources/CalculatorCore
     resources:
       - path: WidgetExtension/WidgetExtension/Assets.xcassets
     info:
@@ -143,10 +137,6 @@ targets:
         CODE_SIGN_ENTITLEMENTS: WidgetExtension/WidgetExtension/WidgetExtension.entitlements
         SKIP_INSTALL: YES
         ENABLE_BITCODE: NO
-    dependencies:
-      - package: CalculatorCore
-      - sdk: SwiftUI.framework
-      - sdk: WidgetKit.framework
 
 schemes:
   Calculator:
