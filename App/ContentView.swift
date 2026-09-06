@@ -80,7 +80,10 @@ struct ContentView: View {
 
             Spacer()
 
-            Picker("模式", selection: $calculatorVM.mode) {
+            Picker("模式", selection: Binding(
+                get: { calculatorVM.mode },
+                set: { calculatorVM.switchMode($0) }
+            )) {
                 ForEach(CalculatorMode.allCases, id: \.self) { mode in
                     Text(mode.displayName).tag(mode)
                 }
