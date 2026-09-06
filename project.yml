@@ -3,7 +3,6 @@ options:
   bundleIdPrefix: com.workbuddy.calc
   deploymentTarget:
     iOS: "17.0"
-    watchOS: "10.0"
   createIntermediateGroups: true
   developmentLanguage: zh-Hans
   groupSortPosition: top
@@ -18,25 +17,20 @@ settings:
   base:
     SWIFT_VERSION: "5.9"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-    WATCHOS_DEPLOYMENT_TARGET: "10.0"
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
     ENABLE_USER_SCRIPT_SANDBOXING: NO
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
-    GCC_TREAT_WARNINGS_AS_ERRORS: NO
     ENABLE_BITCODE: NO
     TARGETED_DEVICE_FAMILY: "1,2"
-    SWIFT_STRICT_CONCURRENCY: minimal
   configs:
     Debug:
       SWIFT_OPTIMIZATION_LEVEL: -Onone
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
     Release:
       SWIFT_OPTIMIZATION_LEVEL: -O
-      SWIFT_COMPILATION_MODE: wholemodule
 
 targets:
-  # ============ 1. 主 iOS App ============
   CalculatorApp:
     type: application
     platform: iOS
@@ -64,19 +58,10 @@ targets:
         MARKETING_VERSION: "1.0.0"
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        ENABLE_PREVIEWS: YES
-    dependencies:
-      - target: WidgetExtension
-        embed: true
-      - target: WatchApp
-        embed: true
     scheme:
       testTargets:
         - CalculatorAppUITests
       gatherCoverageData: true
-      environmentVariables:
-        - variable: OS_ACTIVITY_MODE
-          value: disable
 
   CalculatorAppUITests:
     type: bundle.ui-testing
@@ -88,63 +73,11 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.uitests
         TEST_TARGET_NAME: CalculatorApp
 
-  # ============ 2. Watch App ============
-  WatchApp:
-    type: application
-    platform: watchOS
-    sources:
-      - path: WatchApp/WatchApp
-        excludes:
-          - "Info.plist"
-          - "WatchApp.entitlements"
-      - path: Sources/CalculatorCore
-    resources:
-      - path: WatchApp/WatchApp/Assets.xcassets
-    info:
-      path: WatchApp/WatchApp/Info.plist
-    entitlements:
-      path: WatchApp/WatchApp/WatchApp.entitlements
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.watchkitapp
-        INFOPLIST_FILE: WatchApp/WatchApp/Info.plist
-        CODE_SIGN_ENTITLEMENTS: WatchApp/WatchApp/WatchApp.entitlements
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
-        WATCHOS_DEPLOYMENT_TARGET: "10.0"
-        TARGETED_DEVICE_FAMILY: "4"
-
-  # ============ 3. Widget Extension ============
-  WidgetExtension:
-    type: app-extension
-    platform: iOS
-    sources:
-      - path: WidgetExtension/WidgetExtension
-        excludes:
-          - "Info.plist"
-          - "WidgetExtension.entitlements"
-      - path: Sources/CalculatorCore
-    resources:
-      - path: WidgetExtension/WidgetExtension/Assets.xcassets
-    info:
-      path: WidgetExtension/WidgetExtension/Info.plist
-    entitlements:
-      path: WidgetExtension/WidgetExtension/WidgetExtension.entitlements
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.widget
-        INFOPLIST_FILE: WidgetExtension/WidgetExtension/Info.plist
-        CODE_SIGN_ENTITLEMENTS: WidgetExtension/WidgetExtension/WidgetExtension.entitlements
-        SKIP_INSTALL: YES
-        ENABLE_BITCODE: NO
-
 schemes:
   Calculator:
     build:
       targets:
         CalculatorApp: all
-        WidgetExtension: all
-        WatchApp: all
     run:
       config: Debug
     test:
