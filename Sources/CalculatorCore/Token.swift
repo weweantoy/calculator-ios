@@ -21,6 +21,7 @@ public enum TokenType: Equatable, Sendable {
     case unaryMinus       // 一元负号
     case function(String) // sin / cos / tan / log / ln / sqrt / square
     case constant(String) // pi / e
+    case end              // 末尾哨兵（越界保护）
 }
 
 /// 表达式 Token
@@ -63,6 +64,7 @@ extension TokenType: CustomStringConvertible {
         case .unaryMinus:   return "一元负号"
         case .function(let n): return "函数(\(n))"
         case .constant(let n): return "常量(\(n))"
+        case .end:        return "结束"
         }
     }
 }

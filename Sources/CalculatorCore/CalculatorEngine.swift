@@ -205,11 +205,16 @@ public final class CalculatorEngine: @unchecked Sendable {
         var index: Int = 0
 
         var isAtEnd: Bool { index >= tokens.count }
-        func peek() -> Token { tokens[index] }
+        func peek() -> Token {
+            // 越界保护：返回 .end 哨兵 token
+            guard index < tokens.count else { return Token(type: .end, position: 0) }
+            return tokens[index]
+        }
 
         @discardableResult
         mutating func advance() -> Token {
             defer { index += 1 }
+            guard index < tokens.count else { return Token(type: .end, position: 0) }
             return tokens[index]
         }
 
