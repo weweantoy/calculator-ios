@@ -14,6 +14,7 @@ public enum TokenType: Equatable, Sendable {
     case minus
     case multiply
     case divide
+    case power              // '^' 幂运算（右结合，优先级高于 * /）
     case percent
     case leftParen
     case rightParen
@@ -57,6 +58,7 @@ extension TokenType: CustomStringConvertible {
         case .minus:        return "'-'"
         case .multiply:     return "'×'"
         case .divide:       return "'÷'"
+        case .power:        return "'^'"
         case .percent:      return "'%'"
         case .leftParen:    return "'('"
         case .rightParen:   return "')'"

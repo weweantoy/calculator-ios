@@ -75,6 +75,29 @@ public enum CalculatorNumberFormatter {
 
         return formatter.string(from: value as NSDecimalNumber) ?? "\(double)"
     }
+
+    /// 「可回读」的纯数字字符串：不带千分位、不含科学计数法、最多 12 位小数。
+    /// 用于把计算结果回填到表达式输入框，保证可以被 tokenizer 再次解析。
+    /// - Parameter value: 待转换数值
+    /// - Returns: 形如 `-1234.567890123456` 的 ASCII 数字串
+    public static func plainString(_ value: Decimal) -> String {
+        let double = (value as NSDecimalNumber).doubleValue
+        if double.isNaN || double.isInfinite { return "0" }
+
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = false
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 12
+        formatter.roundingMode = .halfEven
+
+        if let s = formatter.string(from: value as NSDecimalNumber) {
+            // 极端情况下（如 1e30）NumberFormatter 仍可能输出分组符，做一次兜底清理
+            return s.replacingOccurrences(of: ",", with: "")
+        }
+        return "0"
+    }
 }
 
 private extension Decimal {

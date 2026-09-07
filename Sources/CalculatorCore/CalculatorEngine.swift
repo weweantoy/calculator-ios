@@ -47,7 +47,7 @@ indirect enum CalcNode: Equatable {
 
 enum CalcUnaryOp: Equatable { case negate }
 
-enum CalcBinaryOp: Equatable { case plus, minus, multiply, divide }
+enum CalcBinaryOp: Equatable { case plus, minus, multiply, divide, power }
 
 // MARK: - Engine
 
@@ -119,13 +119,16 @@ public final class CalculatorEngine: @unchecked Sendable {
             switch ch {
             case "+":
                 tokens.append(Token(type: .plus, position: pos))
-            case "-":
+            case "-", "−", "–", "—", "﹣", "－":
+                // 兼容 ASCII 连字符与各种 Unicode 减号（键盘输入使用 U+2212）
                 tokens.append(Token(type: .minus, position: pos))
-            case "*", "×", "·":
+            case "*", "×", "·", "＊":
                 tokens.append(Token(type: .multiply, position: pos))
-            case "/", "÷":
+            case "/", "÷", "／":
                 tokens.append(Token(type: .divide, position: pos))
-            case "%":
+            case "^":
+                tokens.append(Token(type: .power, position: pos))
+            case "%", "％":
                 tokens.append(Token(type: .percent, position: pos))
             case "(":
                 tokens.append(Token(type: .leftParen, position: pos))
@@ -182,9 +185,10 @@ public final class CalculatorEngine: @unchecked Sendable {
         switch lower {
         case "sin", "cos", "tan", "log", "ln", "sqrt":
             return (Token(type: .function(lower), position: position), idx)
-        case "pi":
+        case "pi", "π":
+            // 支持 ASCII "pi" 与 Unicode "π"（键盘 π 键直接插入 U+03C0）
             return (Token(type: .constant("pi"), position: position), idx)
-        case "e":
+        case "e", "ℯ":
             return (Token(type: .constant("e"), position: position), idx)
         default:
             throw CalculatorError.invalidToken(position: position)
@@ -196,7 +200,8 @@ public final class CalculatorEngine: @unchecked Sendable {
     // 语法：
     //   expression = term (('+' | '-') term)*
     //   term       = factor (('*' | '/') factor)*
-    //   factor     = ('+' | '-') factor | unary
+    //   factor     = ('+' | '-') factor | power        ← 一元符号优先级低于幂运算
+    //   power      = unary ('^' factor)?               ← 右结合
     //   unary      = primary ('%')?
     //   primary    = number | '(' expression ')' | function | constant
 
@@ -276,8 +281,20 @@ public final class CalculatorEngine: @unchecked Sendable {
                 _ = advance()
                 return try parseFactor()
             default:
-                return try parseUnary()
+                return try parsePower()
             }
+        }
+
+        /// 幂运算：右结合，优先级高于乘除、低于一元负号
+        /// 例：2^3^2 = 2^(3^2) = 512 ； -2^2 = -(2^2) = -4
+        mutating func parsePower() throws -> CalcNode {
+            let base = try parseUnary()
+            if !isAtEnd, case .power = peek().type {
+                _ = advance()
+                let exponent = try parseFactor()
+                return .binary(op: .power, left: base, right: exponent)
+            }
+            return base
         }
 
         mutating func parseUnary() throws -> CalcNode {
@@ -326,11 +343,35 @@ public final class CalculatorEngine: @unchecked Sendable {
 
         case .binary(let op, let left, let right):
             let l = try evaluate(left)
+
+            // iOS 系统计算器语义：右侧为「百分数」时按左侧基数取相对比例
+            //   200 + 10%  → 220      200 − 10%  → 180
+            //   200 × 10%  → 20       200 ÷ 10%  → 2000
+            if case .percent(let percentOperand) = right {
+                let p = try evaluate(percentOperand) / Decimal(100)
+                switch op {
+                case .plus:     return l + l * p
+                case .minus:    return l - l * p
+                case .multiply: return l * p
+                case .divide:
+                    if p == 0 { throw CalculatorError.divisionByZero }
+                    return l / p
+                case .power:
+                    return l.power(p)
+                }
+            }
+
             let r = try evaluate(right)
             switch op {
             case .plus:     return l + r
             case .minus:    return l - r
             case .multiply: return l * r
+            case .power:
+                let result = l.power(r)
+                if result.isNaN || result.isInfinite {
+                    throw CalculatorError.invalidFunctionArgument(function: "^")
+                }
+                return result
             case .divide:
                 if r == 0 { throw CalculatorError.divisionByZero }
                 return l / r

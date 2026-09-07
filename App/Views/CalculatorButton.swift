@@ -55,6 +55,7 @@ struct CalculatorButton: View {
         case .ln:                          return "key_ln"
         case .sqrt:                        return "key_sqrt"
         case .square:                      return "key_square"
+        case .power:                       return "key_power"
         case .pi:                          return "key_pi"
         case .e:                           return "key_e"
         case .modeSwitch:                  return "key_mode_switch"
@@ -85,6 +86,7 @@ struct CalculatorButton: View {
         case .ln:            return "自然对数"
         case .sqrt:          return "平方根"
         case .square:        return "平方"
+        case .power:         return "幂"
         case .pi:            return "圆周率"
         case .e:             return "自然常数"
         case .modeSwitch:    return "模式切换"
@@ -100,7 +102,7 @@ struct CalculatorButton: View {
         case .decimal:      return 32
         case .plus, .minus, .multiply, .divide: return 32
         case .equals:       return 34
-        case .sin, .cos, .tan, .log, .ln, .sqrt, .square:
+        case .sin, .cos, .tan, .log, .ln, .sqrt, .square, .power:
             return 18
         case .pi, .e:       return 26
         case .leftParen, .rightParen:

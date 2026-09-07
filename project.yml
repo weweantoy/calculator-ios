@@ -47,6 +47,8 @@ targets:
     dependencies:
       - package: CalculatorCore
         product: CalculatorCore
+      - target: WidgetExtension
+        embed: true
     resources:
       - path: App/Resources/Assets.xcassets
       - path: App/Resources/zh_CN.lproj
@@ -69,6 +71,34 @@ targets:
       testTargets:
         - CalculatorAppUITests
       gatherCoverageData: true
+
+  WidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: WidgetExtension/WidgetExtension
+        excludes:
+          - "Info.plist"
+          - "WidgetExtension.entitlements"
+    dependencies:
+      - package: CalculatorCore
+        product: CalculatorCore
+    resources:
+      - path: WidgetExtension/WidgetExtension/Assets.xcassets
+    info:
+      path: WidgetExtension/WidgetExtension/Info.plist
+    entitlements:
+      path: WidgetExtension/WidgetExtension/WidgetExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.workbuddy.calc.widget
+        INFOPLIST_FILE: WidgetExtension/WidgetExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: WidgetExtension/WidgetExtension/WidgetExtension.entitlements
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.0"
+        SKIP_INSTALL: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"
 
   CalculatorAppUITests:
     type: bundle.ui-testing

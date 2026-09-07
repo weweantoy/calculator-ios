@@ -119,9 +119,117 @@ final class CalculatorEngineTests: XCTestCase {
 
     func testPercentInExpression() throws {
         let engine = CalculatorEngine()
-        // 200 + 10% = 200 + 0.1 = 200.1
+        // iOS 系统计算器语义：200 + 10% = 200 + 200×10/100 = 220
         let result = try engine.evaluate("200+10%")
-        XCTAssertEqual(result, Decimal(string: "200.1")!)
+        XCTAssertEqual(result, Decimal(220))
+    }
+
+    func testPercentSubtractIsRelative() throws {
+        let engine = CalculatorEngine()
+        // 200 − 10% = 200 − 20 = 180
+        let result = try engine.evaluate("200-10%")
+        XCTAssertEqual(result, Decimal(180))
+    }
+
+    func testPercentMultiplyAndDivide() throws {
+        let engine = CalculatorEngine()
+        // 200 × 10% = 20
+        let mul = try engine.evaluate("200*10%")
+        XCTAssertEqual(mul, Decimal(20))
+        // 200 ÷ 10% = 2000
+        let div = try engine.evaluate("200/10%")
+        XCTAssertEqual(div, Decimal(2000))
+    }
+
+    // MARK: - Unicode 符号兼容（键盘实际输入）
+
+    func testUnicodeMinusSign() throws {
+        let engine = CalculatorEngine()
+        // 键盘 − 键插入 U+2212，必须与 ASCII '-' 等价
+        let unicode = try engine.evaluate("10−3")
+        let ascii   = try engine.evaluate("10-3")
+        XCTAssertEqual(unicode, ascii)
+        XCTAssertEqual(unicode, Decimal(7))
+    }
+
+    func testUnicodeMultiplicationAndDivision() throws {
+        let engine = CalculatorEngine()
+        let mul = try engine.evaluate("6×7")
+        let div = try engine.evaluate("42÷6")
+        XCTAssertEqual(mul, Decimal(42))
+        XCTAssertEqual(div, Decimal(7))
+    }
+
+    func testPiSymbol() throws {
+        let engine = CalculatorEngine()
+        // 键盘 π 键插入 U+03C0，必须与 "pi" 等价
+        let symbol = try engine.evaluate("π")
+        let word   = try engine.evaluate("pi")
+        XCTAssertEqual(symbol, word)
+        XCTAssertEqual(symbol, Decimal.piValue, accuracy: Decimal(string: "0.0001")!)
+    }
+
+    func testExpressionWithDisplaySymbols() throws {
+        let engine = CalculatorEngine()
+        // 完整模拟用户按键序列：12 × 5 − 8 =
+        let result = try engine.evaluate("12×5−8")
+        XCTAssertEqual(result, Decimal(52))
+    }
+
+    // MARK: - 幂运算
+
+    func testPower() throws {
+        let engine = CalculatorEngine()
+        let result = try engine.evaluate("2^10")
+        XCTAssertEqual(result, Decimal(1024))
+    }
+
+    func testPowerPrecedenceAboveMultiplication() throws {
+        let engine = CalculatorEngine()
+        // 2 × 3^2 = 2 × 9 = 18（而非 (2×3)^2 = 36）
+        let result = try engine.evaluate("2*3^2")
+        XCTAssertEqual(result, Decimal(18))
+    }
+
+    func testPowerIsRightAssociative() throws {
+        let engine = CalculatorEngine()
+        // 2^3^2 = 2^(3^2) = 512
+        let result = try engine.evaluate("2^3^2")
+        XCTAssertEqual(result, Decimal(512))
+    }
+
+    func testUnaryMinusBindsLooserThanPower() throws {
+        let engine = CalculatorEngine()
+        // −2^2 = −(2^2) = −4
+        let result = try engine.evaluate("-2^2")
+        XCTAssertEqual(result, Decimal(-4))
+    }
+
+    func testNegativeExponent() throws {
+        let engine = CalculatorEngine()
+        // 2^-2 = 0.25
+        let result = try engine.evaluate("2^-2")
+        XCTAssertEqual(result, Decimal(string: "0.25")!, accuracy: Decimal(string: "0.0001")!)
+    }
+
+    func testFractionalExponent() throws {
+        let engine = CalculatorEngine()
+        // 9^0.5 = 3
+        let result = try engine.evaluate("9^0.5")
+        XCTAssertEqual(result, Decimal(3), accuracy: Decimal(string: "0.0001")!)
+    }
+
+    // MARK: - 可回读字符串（结果回填表达式用）
+
+    func testPlainStringIsParseable() throws {
+        let engine = CalculatorEngine()
+        // 1/3 的结果回填后必须能被再次解析
+        let third = try engine.evaluate("1/3")
+        let plain = CalculatorNumberFormatter.plainString(third)
+        XCTAssertFalse(plain.contains(","))
+        XCTAssertFalse(plain.contains("E"))
+        let roundTrip = try engine.evaluate(plain)
+        XCTAssertEqual(roundTrip, third, accuracy: Decimal(string: "0.000000000001")!)
     }
 
     // MARK: - 常量

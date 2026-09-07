@@ -30,6 +30,9 @@ final class CalculatorViewModel: ObservableObject {
     /// 用于实时计算：当前正在编辑的表达式
     private var draftExpression: String = ""
 
+    /// 最近一次「成功求值」的显示串；输入未完成时用它兜底，避免显示区闪 0
+    private var lastValidDisplay: String?
+
     /// 引擎实例（可在角度单位切换时重建）
     private var engine: CalculatorEngine
 
@@ -101,6 +104,8 @@ final class CalculatorViewModel: ObservableObject {
             appendFunction("sqrt")
         case .square:
             appendSquare()
+        case .power:
+            appendOperator("^")
         case .pi:
             appendConstant("π")
         case .e:
@@ -128,17 +133,26 @@ final class CalculatorViewModel: ObservableObject {
             if numStr.contains(".") {
                 return  // 已含小数点，忽略
             }
+            draftExpression.append(".")
+        } else {
+            // 空表达式或以运算符 / 左括号结尾 → 自动补 "0."，避免 "sqrt(." 这类无法解析的输入
+            draftExpression.append("0.")
         }
-        draftExpression.append(".")
         expressionString = draftExpression
         recompute()
     }
 
     private func appendOperator(_ symbol: String) {
         errorMessage = nil
-        // 避免连续两个运算符：若末位已是运算符，先替换
-        if let last = draftExpression.last, "+-×÷*/·".contains(last) {
-            draftExpression.removeLast()
+        let arithmeticOps = Set<Character>(["+", "-", "−", "×", "*", "·", "÷", "/"])
+
+        if let last = draftExpression.last {
+            if symbol == "^" {
+                // 幂运算只对连续的 ^ 做替换，保留 "^(-3)" 这类负指数输入
+                if last == "^" { draftExpression.removeLast() }
+            } else if arithmeticOps.contains(last) {
+                draftExpression.removeLast()
+            }
         }
         draftExpression.append(symbol)
         expressionString = draftExpression
@@ -154,24 +168,17 @@ final class CalculatorViewModel: ObservableObject {
 
     private func appendPercent() {
         errorMessage = nil
-        // 基础模式：对最后输入数字除以 100，符合 iOS 系统行为
-        // 科学模式：作为一元后缀运算符追加
-        if mode == .basic {
-            let pattern = #"(-?\d+\.?\d*)$"#
-            if let range = draftExpression.range(of: pattern, options: .regularExpression) {
-                let numStr = String(draftExpression[range])
-                if let value = Decimal(string: numStr, locale: Locale(identifier: "en_US_POSIX")) {
-                    let percentValue = value / Decimal(100)
-                    let formatted = CalculatorNumberFormatter.format(percentValue)
-                        .replacingOccurrences(of: ",", with: "")
-                    draftExpression.replaceSubrange(range, with: formatted)
-                    expressionString = draftExpression
-                    displayString = CalculatorNumberFormatter.format(percentValue)
-                    return
-                }
-            }
-        }
-        // 科学模式或基础模式无末尾数字：直接追加 %
+        guard !draftExpression.isEmpty else { return }
+        guard let last = draftExpression.last else { return }
+
+        let arithmeticOps = Set<Character>(["+", "-", "−", "×", "*", "·", "÷", "/", "^", "%"])
+        // 末位是运算符、幂号或已有百分号时忽略，避免产生无法解析的表达式
+        if arithmeticOps.contains(last) { return }
+
+        // 统一追加 "%"，由引擎按 iOS 系统语义处理：
+        //   A + B% → A + A×B/100 ；A − B% → A − A×B/100
+        //   A × B% → A × B/100   ；A ÷ B% → A ÷ (B/100)
+        //   单独 B% → B/100
         draftExpression.append("%")
         expressionString = draftExpression
         recompute()
@@ -217,19 +224,15 @@ final class CalculatorViewModel: ObservableObject {
     private func appendSquare() {
         errorMessage = nil
         guard !draftExpression.isEmpty else { return }
-        // 对当前 draftExpression 整体求平方，立即替换为结果。
-        // 用户体验等价于 iOS 系统计算器的"对最后表达式求平方"。
-        do {
-            let v = try engine.evaluate(draftExpression)
-            let squared = v.squared
-            let formatted = CalculatorNumberFormatter.format(squared)
-                .replacingOccurrences(of: ",", with: "")
-            draftExpression = formatted
-            expressionString = draftExpression
-            displayString = CalculatorNumberFormatter.format(squared)
-        } catch {
-            errorMessage = "无法计算平方"
-        }
+        guard let last = draftExpression.last else { return }
+        let operators = Set<Character>(["+", "-", "−", "×", "*", "·", "÷", "/", "^"])
+        if operators.contains(last) { return }
+
+        // 追加 "^2" 而不是把整个表达式折叠成结果，
+        // 与 iOS 系统计算器一致：输入 2+3 后按 x² 得到 2+3² = 11
+        draftExpression.append("^2")
+        expressionString = draftExpression
+        recompute()
     }
 
     // MARK: - 编辑
@@ -247,6 +250,7 @@ final class CalculatorViewModel: ObservableObject {
         draftExpression = ""
         expressionString = ""
         displayString = "0"
+        lastValidDisplay = nil
         errorMessage = nil
     }
 
@@ -281,9 +285,13 @@ final class CalculatorViewModel: ObservableObject {
             // 触发 Widget 刷新
             WidgetCenter.shared.reloadAllTimelines()
 
-            // 将结果设为下一次输入起点
-            draftExpression = displayString.replacingOccurrences(of: ",", with: "")
-            expressionString = draftExpression
+            // 将结果设为下一次输入起点。
+            // 必须使用「可回读」的纯数字串（无千分位、无科学计数法），
+            // 否则表达式如 "1.23E+16" 会被 tokenizer 判为无效字符。
+            let plain = CalculatorNumberFormatter.plainString(result)
+            draftExpression = plain
+            expressionString = plain
+            lastValidDisplay = displayString
         } catch let error as CalculatorError {
             errorMessage = error.localizedDescription
             displayString = "错误"
@@ -303,11 +311,14 @@ final class CalculatorViewModel: ObservableObject {
         do {
             let result = try engine.evaluate(draftExpression)
             displayString = CalculatorNumberFormatter.format(result)
+            lastValidDisplay = displayString
             errorMessage = nil
         } catch {
-            // 输入未完成时不显示错误，仅在主显示保持上一可用结果
-            // 或可在此处显示 "..." 提示
-            displayString = "0"
+            // 输入尚未完成（如 "5−"、"sqrt(" ）时不清零，
+            // 保留上一次可用结果，避免显示区闪烁成 "0"
+            if let last = lastValidDisplay {
+                displayString = last
+            }
         }
     }
 
@@ -317,6 +328,7 @@ final class CalculatorViewModel: ObservableObject {
         draftExpression = record.expression
         expressionString = record.expression
         displayString = record.result
+        lastValidDisplay = record.result
         errorMessage = nil
     }
 

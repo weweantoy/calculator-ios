@@ -71,6 +71,7 @@ public enum CalculatorKey: Hashable, Sendable {
     case ln               // 自然对数
     case sqrt
     case square           // x²
+    case power            // xʸ（幂）
 
     // 常量
     case pi
@@ -103,6 +104,7 @@ public enum CalculatorKey: Hashable, Sendable {
         case .ln:                        return "ln"
         case .sqrt:                      return "√"
         case .square:                    return "x²"
+        case .power:                     return "xʸ"
         case .pi:                        return "π"
         case .e:                         return "e"
         case .modeSwitch:                return "mode"
@@ -124,7 +126,7 @@ public enum CalculatorKey: Hashable, Sendable {
             return .digit
         case .plus, .minus, .multiply, .divide, .equals:
             return .operation
-        case .sin, .cos, .tan, .log, .ln, .sqrt, .square, .pi, .e, .leftParen, .rightParen:
+        case .sin, .cos, .tan, .log, .ln, .sqrt, .square, .power, .pi, .e, .leftParen, .rightParen:
             return .function
         case .clear, .delete, .percent, .toggleSign, .modeSwitch, .angleUnitSwitch:
             return .modifier

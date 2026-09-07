@@ -77,6 +77,16 @@ extension Decimal {
         self * self
     }
 
+    /// 幂运算 `self ^ exponent`
+    /// 通过 Double 桥接实现；底数为负且指数非整数时结果为 NaN。
+    public func power(_ exponent: Decimal) -> Decimal {
+        let base = (self as NSDecimalNumber).doubleValue
+        let exp  = (exponent as NSDecimalNumber).doubleValue
+        let raw  = pow(base, exp)
+        if raw.isNaN || raw.isInfinite { return Decimal.nan }
+        return Decimal(raw)
+    }
+
     /// 百分比（值 / 100）
     public var percent: Decimal {
         self / Decimal(100)
