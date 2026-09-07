@@ -23,6 +23,8 @@ settings:
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
     ENABLE_BITCODE: NO
     TARGETED_DEVICE_FAMILY: "1,2"
+    # 强制关闭 Xcode 自动 Info.plist 生成，否则自定义 plist 会被覆盖
+    GENERATE_INFOPLIST_FILE: NO
   configs:
     Debug:
       SWIFT_OPTIMIZATION_LEVEL: -Onone
