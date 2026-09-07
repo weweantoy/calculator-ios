@@ -36,23 +36,27 @@ jobs:
 
       - name: Generate Xcode Project
         run: |
+          # 关键：xcodegen 的 "Generating plists..." 步骤会**重写** info.path
+          # 指向的源 Info.plist 文件，把它压缩成只包含白名单键的最小版本。
+          # 这会丢失 CFBundleDisplayName / UILaunchScreen / CFBundleURLTypes /
+          # NSExtension 等所有自定义键。必须在 xcodegen 之前备份，xcodegen
+          # 之后立刻把原始 plist 恢复回源文件，后续 archive 步骤才能拿到完整版。
+          mkdir -p build/plist-backup
+          cp App/Resources/Info.plist build/plist-backup/App-Info.plist
+          cp WidgetExtension/WidgetExtension/Info.plist build/plist-backup/Widget-Info.plist
+          echo '--- pre-xcodegen backup sizes ---'
+          wc -c build/plist-backup/*.plist
+
           xcodegen generate
           # Xcode 15.4 不支持 objectVersion 77 (Xcode 16 格式), 降级到 56
           sed -i '' 's/objectVersion = 77;/objectVersion = 56;/g' Calculator.xcodeproj/project.pbxproj || true
           echo "objectVersion:" $(grep objectVersion Calculator.xcodeproj/project.pbxproj | head -1)
 
-      # 关键：在 archive 之前备份源 Info.plist。Xcode 15.4 在 archive 过程中
-      # 会改写 INFOPLIST_FILE 指向的源文件，应用白名单并删掉自定义键，
-      # 必须在 archive 之前快照保存。
-      - name: Backup source Info.plist files
-        run: |
-          mkdir -p build/plist-backup
-          cp App/Resources/Info.plist build/plist-backup/App-Info.plist
-          cp WidgetExtension/WidgetExtension/Info.plist build/plist-backup/Widget-Info.plist
-          echo '--- backup sizes ---'
-          wc -c build/plist-backup/*.plist
-          echo '--- app plist keys ---'
-          python3 -c "import plistlib; p=plistlib.load(open('build/plist-backup/App-Info.plist','rb')); print('keys:', len(p), list(p.keys()))"
+          # xcodegen 把源 Info.plist 改写后，从 backup 恢复原始版本
+          cp build/plist-backup/App-Info.plist App/Resources/Info.plist
+          cp build/plist-backup/Widget-Info.plist WidgetExtension/WidgetExtension/Info.plist
+          echo '--- post-restore source sizes ---'
+          wc -c App/Resources/Info.plist WidgetExtension/WidgetExtension/Info.plist
 
       - name: Archive (unsigned)
         run: |
