@@ -20,6 +20,20 @@
     <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
+
+    <!-- 以下三项原先由 Xcode 自动生成；关闭 GENERATE_INFOPLIST_FILE 后需显式声明 -->
+    <key>MinimumOSVersion</key>
+    <string>17.0</string>
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>iPhoneOS</string>
+    </array>
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+        <integer>2</integer>
+    </array>
+
     <key>NSExtension</key>
     <dict>
         <key>NSExtensionPointIdentifier</key>
