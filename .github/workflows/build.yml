@@ -57,17 +57,50 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             clean archive
 
+      # Xcode 15 的 infoPlistUtility 对自定义 Info.plist 应用严格白名单，
+      # 会丢弃 CFBundleDisplayName / UILaunchScreen / CFBundleURLTypes 等键，
+      # 并把 widget 的 NSExtension 整个砍掉。归档后再用 Python 注入回来。
+      - name: Restore custom Info.plist keys
+        run: |
+          python3 - <<'PY'
+          import os, plistlib
+          AR='build/Calculator.xcarchive/Products/Applications/CalculatorApp.app'
+          targets = [
+              (AR + '/Info.plist', 'App/Resources/Info.plist'),
+              (AR + '/PlugIns/WidgetExtension.appex/Info.plist',
+               'WidgetExtension/WidgetExtension/Info.plist'),
+          ]
+          for dst, src in targets:
+              if not (os.path.exists(dst) and os.path.exists(src)):
+                  print('skip', dst, src)
+                  continue
+              with open(dst, 'rb') as f: t = plistlib.load(f)
+              with open(src, 'rb') as f: s = plistlib.load(f)
+              added = 0
+              for k, v in s.items():
+                  t[k] = v
+                  added += 1
+              with open(dst, 'wb') as f: plistlib.dump(t, f, fmt=plistlib.FMT_XML)
+              print(f'merged {added} keys into {dst}')
+
+          print('--- verification ---')
+          with open(AR + '/PlugIns/WidgetExtension.appex/Info.plist', 'rb') as f: w = plistlib.load(f)
+          print('widget NSExtension:', w.get('NSExtension'))
+          with open(AR + '/Info.plist', 'rb') as f: a = plistlib.load(f)
+          print('app CFBundleDisplayName:', a.get('CFBundleDisplayName'))
+          print('app CFBundleURLTypes:', a.get('CFBundleURLTypes') is not None)
+          print('app UILaunchScreen:', a.get('UILaunchScreen') is not None)
+          PY
+
       - name: Package IPA from xcarchive
         run: |
           # 直接从 xcarchive 中的 .app 打包成 IPA（绕过 xcodebuild exportArchive 的 Team 检查）
-          # Sideloadly 安装时会用自己的签名重新签名
+          # Sideloadly 安装时会用自己的证书重新签名
           mkdir -p build/Payload
-          # 先拷贝 .app（不要用 --keepParent，否则 iOS bundle 被当作单文件归档）
           cp -R build/Calculator.xcarchive/Products/Applications/CalculatorApp.app build/Payload/
           cd build
-          # 使用 zip 递归打包 Payload 目录为 IPA
           zip -qr Calculator.ipa Payload/
-          echo "--- IPA contents (first 20) ---"
+          echo "--- IPA contents (first 25) ---"
           unzip -l Calculator.ipa | head -25
           ls -la Calculator.ipa
 
