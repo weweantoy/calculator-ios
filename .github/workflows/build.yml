@@ -62,6 +62,12 @@ jobs:
       # 并把 widget 的 NSExtension 整个砍掉。归档后再用 Python 注入回来。
       - name: Restore custom Info.plist keys
         run: |
+          echo '--- 1. inspect archive plist inode ---'
+          ls -li build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/Info.plist
+          ls -li build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/PlugIns/WidgetExtension.appex/Info.plist
+          file build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/Info.plist
+
+          echo '--- 2. merge src into dst ---'
           python3 - <<'PY'
           import os, plistlib
           AR='build/Calculator.xcarchive/Products/Applications/CalculatorApp.app'
@@ -74,23 +80,39 @@ jobs:
               if not (os.path.exists(dst) and os.path.exists(src)):
                   print('skip', dst, src)
                   continue
-              with open(dst, 'rb') as f: t = plistlib.load(f)
+              # 读取 symlink 真实路径
+              rdst = os.path.realpath(dst)
+              print(f'\n=== merge {dst} ===')
+              print(f'  realpath: {rdst}')
+              print(f'  islink: {os.path.islink(dst)}')
+              # 读 dst (按真实路径读)
+              with open(rdst, 'rb') as f: t = plistlib.load(f)
               with open(src, 'rb') as f: s = plistlib.load(f)
+              print(f'  dst keys ({len(t)}) before merge: {list(t.keys())[:8]}...')
+              print(f'  src keys ({len(s)}) to merge: {list(s.keys())[:8]}...')
               added = 0
               for k, v in s.items():
                   t[k] = v
                   added += 1
-              with open(dst, 'wb') as f: plistlib.dump(t, f, fmt=plistlib.FMT_XML)
-              print(f'merged {added} keys into {dst}')
+              # 显式 truncate, 再写
+              with open(rdst, 'wb') as f:
+                  plistlib.dump(t, f, fmt=plistlib.FMT_XML)
+                  f.flush()
+                  os.fsync(f.fileno())
+              print(f'merged {added} keys into {rdst}')
 
-          print('--- verification ---')
+          print('\n--- verification (re-read after write) ---')
           with open(AR + '/PlugIns/WidgetExtension.appex/Info.plist', 'rb') as f: w = plistlib.load(f)
-          print('widget NSExtension:', w.get('NSExtension'))
+          print('widget NSExtension:', w.get('NSExtension') is not None, '/ value:', w.get('NSExtension'))
           with open(AR + '/Info.plist', 'rb') as f: a = plistlib.load(f)
           print('app CFBundleDisplayName:', a.get('CFBundleDisplayName'))
           print('app CFBundleURLTypes:', a.get('CFBundleURLTypes') is not None)
           print('app UILaunchScreen:', a.get('UILaunchScreen') is not None)
+          print('app keys total:', len(a))
           PY
+
+          echo '--- 3. re-check inode after merge ---'
+          ls -li build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/Info.plist
 
       - name: Package IPA from xcarchive
         run: |
