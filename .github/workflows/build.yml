@@ -41,6 +41,19 @@ jobs:
           sed -i '' 's/objectVersion = 77;/objectVersion = 56;/g' Calculator.xcodeproj/project.pbxproj || true
           echo "objectVersion:" $(grep objectVersion Calculator.xcodeproj/project.pbxproj | head -1)
 
+      # 关键：在 archive 之前备份源 Info.plist。Xcode 15.4 在 archive 过程中
+      # 会改写 INFOPLIST_FILE 指向的源文件，应用白名单并删掉自定义键，
+      # 必须在 archive 之前快照保存。
+      - name: Backup source Info.plist files
+        run: |
+          mkdir -p build/plist-backup
+          cp App/Resources/Info.plist build/plist-backup/App-Info.plist
+          cp WidgetExtension/WidgetExtension/Info.plist build/plist-backup/Widget-Info.plist
+          echo '--- backup sizes ---'
+          wc -c build/plist-backup/*.plist
+          echo '--- app plist keys ---'
+          python3 -c "import plistlib; p=plistlib.load(open('build/plist-backup/App-Info.plist','rb')); print('keys:', len(p), list(p.keys()))"
+
       - name: Archive (unsigned)
         run: |
           mkdir -p build
@@ -57,51 +70,39 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             clean archive
 
-      # Xcode 15 的 infoPlistUtility 对自定义 Info.plist 应用严格白名单，
+      # Xcode 15.4 的 infoPlistUtility 对自定义 Info.plist 应用严格白名单，
       # 会丢弃 CFBundleDisplayName / UILaunchScreen / CFBundleURLTypes 等键，
-      # 并把 widget 的 NSExtension 整个砍掉。归档后再用 Python 注入回来。
+      # 并把 widget 的 NSExtension 整个砍掉。
+      # 更糟的是：archive 过程还会改写源 Info.plist 文件本身，所以必须从
+      # archive 前保存的 backup 读取原始 plist。归档后用 Python 注入回来。
       - name: Restore custom Info.plist keys
         run: |
-          echo '--- 1. inspect archive plist inode ---'
-          ls -li build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/Info.plist
-          ls -li build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/PlugIns/WidgetExtension.appex/Info.plist
-          file build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/Info.plist
-
-          echo '--- 2. merge src into dst ---'
           python3 - <<'PY'
           import os, plistlib
           AR='build/Calculator.xcarchive/Products/Applications/CalculatorApp.app'
           targets = [
-              (AR + '/Info.plist', 'App/Resources/Info.plist'),
+              (AR + '/Info.plist',
+               'build/plist-backup/App-Info.plist'),
               (AR + '/PlugIns/WidgetExtension.appex/Info.plist',
-               'WidgetExtension/WidgetExtension/Info.plist'),
+               'build/plist-backup/Widget-Info.plist'),
           ]
           for dst, src in targets:
               if not (os.path.exists(dst) and os.path.exists(src)):
                   print('skip', dst, src)
                   continue
-              # 读取 symlink 真实路径
-              rdst = os.path.realpath(dst)
-              print(f'\n=== merge {dst} ===')
-              print(f'  realpath: {rdst}')
-              print(f'  islink: {os.path.islink(dst)}')
-              # 读 dst (按真实路径读)
-              with open(rdst, 'rb') as f: t = plistlib.load(f)
+              with open(dst, 'rb') as f: t = plistlib.load(f)
               with open(src, 'rb') as f: s = plistlib.load(f)
-              print(f'  dst keys ({len(t)}) before merge: {list(t.keys())[:8]}...')
-              print(f'  src keys ({len(s)}) to merge: {list(s.keys())[:8]}...')
               added = 0
               for k, v in s.items():
                   t[k] = v
                   added += 1
-              # 显式 truncate, 再写
-              with open(rdst, 'wb') as f:
+              with open(dst, 'wb') as f:
                   plistlib.dump(t, f, fmt=plistlib.FMT_XML)
                   f.flush()
                   os.fsync(f.fileno())
-              print(f'merged {added} keys into {rdst}')
+              print(f'merged {added} keys into {dst}')
 
-          print('\n--- verification (re-read after write) ---')
+          print('--- verification ---')
           with open(AR + '/PlugIns/WidgetExtension.appex/Info.plist', 'rb') as f: w = plistlib.load(f)
           print('widget NSExtension:', w.get('NSExtension') is not None, '/ value:', w.get('NSExtension'))
           with open(AR + '/Info.plist', 'rb') as f: a = plistlib.load(f)
@@ -110,9 +111,6 @@ jobs:
           print('app UILaunchScreen:', a.get('UILaunchScreen') is not None)
           print('app keys total:', len(a))
           PY
-
-          echo '--- 3. re-check inode after merge ---'
-          ls -li build/Calculator.xcarchive/Products/Applications/CalculatorApp.app/Info.plist
 
       - name: Package IPA from xcarchive
         run: |
