@@ -24,7 +24,7 @@
 
 	<!-- 以下三项原先由 Xcode 自动生成；关闭 GENERATE_INFOPLIST_FILE 后需显式声明 -->
 	<key>MinimumOSVersion</key>
-	<string>17.0</string>
+	<string>16.0</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>iPhoneOS</string>
