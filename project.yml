@@ -2,7 +2,7 @@ name: Calculator
 options:
   bundleIdPrefix: com.workbuddy.calc
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "16.0"
   createIntermediateGroups: true
   developmentLanguage: zh-Hans
   groupSortPosition: top
