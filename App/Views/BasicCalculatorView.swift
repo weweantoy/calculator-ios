@@ -21,10 +21,10 @@ struct BasicCalculatorView: View {
 
     var body: some View {
         VStack(spacing: rowSpacing) {
-            // 行 1: AC ± % ÷
+            // 行 1: AC ⌫ % ÷（± 移除：与 = 重复场景少，删除键更常用）
             HStack(spacing: 12) {
                 CalculatorButton(key: .clear, action: viewModel.handleKey)
-                CalculatorButton(key: .toggleSign, action: viewModel.handleKey)
+                CalculatorButton(key: .delete, action: viewModel.handleKey)
                 CalculatorButton(key: .percent, action: viewModel.handleKey)
                 CalculatorButton(key: .divide, action: viewModel.handleKey)
             }
