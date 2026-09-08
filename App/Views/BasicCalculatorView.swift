@@ -2,7 +2,9 @@
 //  BasicCalculatorView.swift
 //  App
 //
-//  基础模式键盘：5 行 × 4 列，0 键双宽。
+//  基础模式键盘（参考"计算器 HD"布局）：
+//  行1: AC ( ) ⌫   行2: ± % ÷ ×   行3: 7 8 9 +   行4: 4 5 6 −
+//  底部: 左侧两行 1 2 3 / 0 . ，右侧 = 大键纵跨两行。
 //
 
 import SwiftUI
@@ -12,58 +14,82 @@ struct BasicCalculatorView: View {
 
     @ObservedObject var viewModel: CalculatorViewModel
 
-    private let columns: [GridItem] = Array(
-        repeating: GridItem(.flexible(), spacing: 12),
-        count: 4
-    )
-
-    private let rowSpacing: CGFloat = 12
+    private let spacing: CGFloat = 12
 
     var body: some View {
-        VStack(spacing: rowSpacing) {
-            // 行 1: AC ⌫ % ÷（± 移除：与 = 重复场景少，删除键更常用）
-            HStack(spacing: 12) {
+        VStack(spacing: spacing) {
+            // 行 1: AC ( ) ⌫
+            HStack(spacing: spacing) {
                 CalculatorButton(key: .clear, action: viewModel.handleKey)
+                CalculatorButton(key: .leftParen, action: viewModel.handleKey)
+                CalculatorButton(key: .rightParen, action: viewModel.handleKey)
                 CalculatorButton(key: .delete, action: viewModel.handleKey)
-                CalculatorButton(key: .percent, action: viewModel.handleKey)
-                CalculatorButton(key: .divide, action: viewModel.handleKey)
             }
 
-            // 行 2: 7 8 9 ×
-            HStack(spacing: 12) {
-                CalculatorButton(key: .digit(7), action: viewModel.handleKey)
-                CalculatorButton(key: .digit(8), action: viewModel.handleKey)
-                CalculatorButton(key: .digit(9), action: viewModel.handleKey)
+            // 行 2: ± % ÷ ×
+            HStack(spacing: spacing) {
+                CalculatorButton(key: .toggleSign, action: viewModel.handleKey)
+                CalculatorButton(key: .percent, action: viewModel.handleKey)
+                CalculatorButton(key: .divide, action: viewModel.handleKey)
                 CalculatorButton(key: .multiply, action: viewModel.handleKey)
             }
 
-            // 行 3: 4 5 6 −
-            HStack(spacing: 12) {
+            // 行 3: 7 8 9 +
+            HStack(spacing: spacing) {
+                CalculatorButton(key: .digit(7), action: viewModel.handleKey)
+                CalculatorButton(key: .digit(8), action: viewModel.handleKey)
+                CalculatorButton(key: .digit(9), action: viewModel.handleKey)
+                CalculatorButton(key: .plus, action: viewModel.handleKey)
+            }
+
+            // 行 4: 4 5 6 −
+            HStack(spacing: spacing) {
                 CalculatorButton(key: .digit(4), action: viewModel.handleKey)
                 CalculatorButton(key: .digit(5), action: viewModel.handleKey)
                 CalculatorButton(key: .digit(6), action: viewModel.handleKey)
                 CalculatorButton(key: .minus, action: viewModel.handleKey)
             }
 
-            // 行 4: 1 2 3 +
-            HStack(spacing: 12) {
-                CalculatorButton(key: .digit(1), action: viewModel.handleKey)
-                CalculatorButton(key: .digit(2), action: viewModel.handleKey)
-                CalculatorButton(key: .digit(3), action: viewModel.handleKey)
-                CalculatorButton(key: .plus, action: viewModel.handleKey)
-            }
-
-            // 行 5: 0(双宽) . =
-            HStack(spacing: 12) {
-                CalculatorButton(key: .digit(0), action: viewModel.handleKey)
-                    .layoutPriority(2)
-                CalculatorButton(key: .decimal, action: viewModel.handleKey)
-                CalculatorButton(key: .equals, action: {
+            // 行 5-6: 左侧 1 2 3 / 0 . 两行，右侧 = 纵跨两行
+            HStack(spacing: spacing) {
+                VStack(spacing: spacing) {
+                    HStack(spacing: spacing) {
+                        CalculatorButton(key: .digit(1), action: viewModel.handleKey)
+                        CalculatorButton(key: .digit(2), action: viewModel.handleKey)
+                        CalculatorButton(key: .digit(3), action: viewModel.handleKey)
+                    }
+                    HStack(spacing: spacing) {
+                        CalculatorButton(key: .digit(0), action: viewModel.handleKey)
+                            .layoutPriority(2)
+                        CalculatorButton(key: .decimal, action: viewModel.handleKey)
+                    }
+                }
+                EqualsButton(action: {
                     HapticsManager.shared.commit()
-                    viewModel.handleKey($0)
+                    viewModel.handleKey(.equals)
                 })
             }
         }
         .padding(.horizontal, 12)
+    }
+}
+
+/// = 大键：宽度与单键一致，高度纵跨两行
+struct EqualsButton: View {
+
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(CalculatorKey.equals.label)
+                .font(.system(size: 34, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.orange)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("key_equals")
+        .accessibilityLabel("等于")
     }
 }
