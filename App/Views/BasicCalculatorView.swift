@@ -50,11 +50,12 @@ struct BasicCalculatorView: View {
                 CalculatorButton(key: .plus, action: viewModel.handleKey)
             }
 
-            // 行 5: 0 . =
+            // 行 5: 0 . = ⌫
             HStack(spacing: spacing) {
                 CalculatorButton(key: .digit(0), action: viewModel.handleKey)
                 CalculatorButton(key: .decimal, action: viewModel.handleKey)
                 CalculatorButton(key: .equals, action: viewModel.handleKey)
+                CalculatorButton(key: .delete, action: viewModel.handleKey)
             }
         }
         .padding(.horizontal, 12)
