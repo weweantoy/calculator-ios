@@ -18,10 +18,10 @@ struct BasicCalculatorView: View {
 
     var body: some View {
         VStack(spacing: spacing) {
-            // 行 1: AC ± % ÷
+            // 行 1: AC ⌫ % ÷
             HStack(spacing: spacing) {
                 CalculatorButton(key: .clear, action: viewModel.handleKey)
-                CalculatorButton(key: .toggleSign, action: viewModel.handleKey)
+                CalculatorButton(key: .delete, action: viewModel.handleKey)
                 CalculatorButton(key: .percent, action: viewModel.handleKey)
                 CalculatorButton(key: .divide, action: viewModel.handleKey)
             }
@@ -50,12 +50,11 @@ struct BasicCalculatorView: View {
                 CalculatorButton(key: .plus, action: viewModel.handleKey)
             }
 
-            // 行 5: 0 . = ⌫
+            // 行 5: 0 . =
             HStack(spacing: spacing) {
                 CalculatorButton(key: .digit(0), action: viewModel.handleKey)
                 CalculatorButton(key: .decimal, action: viewModel.handleKey)
                 CalculatorButton(key: .equals, action: viewModel.handleKey)
-                CalculatorButton(key: .delete, action: viewModel.handleKey)
             }
         }
         .padding(.horizontal, 12)
