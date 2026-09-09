@@ -2,8 +2,8 @@
 //  BasicCalculatorView.swift
 //  App
 //
-//  基础模式键盘（参考"计算器 HD"布局）：
-//  行1: AC ( ) ⌫   行2: ± % ÷ ×   行3: 7 8 9 +   行4: 4 5 6 −
+//  基础模式键盘（简洁版）：
+//  行1: AC ⌫ ÷ ×   行2: 7 8 9 −   行3: 4 5 6 +
 //  底部: 左侧两行 1 2 3 / 0 . ，右侧 = 大键纵跨两行。
 //
 
@@ -18,39 +18,31 @@ struct BasicCalculatorView: View {
 
     var body: some View {
         VStack(spacing: spacing) {
-            // 行 1: AC ( ) ⌫
+            // 行 1: AC ⌫ ÷ ×
             HStack(spacing: spacing) {
                 CalculatorButton(key: .clear, action: viewModel.handleKey)
-                CalculatorButton(key: .leftParen, action: viewModel.handleKey)
-                CalculatorButton(key: .rightParen, action: viewModel.handleKey)
                 CalculatorButton(key: .delete, action: viewModel.handleKey)
-            }
-
-            // 行 2: ± % ÷ ×
-            HStack(spacing: spacing) {
-                CalculatorButton(key: .toggleSign, action: viewModel.handleKey)
-                CalculatorButton(key: .percent, action: viewModel.handleKey)
                 CalculatorButton(key: .divide, action: viewModel.handleKey)
                 CalculatorButton(key: .multiply, action: viewModel.handleKey)
             }
 
-            // 行 3: 7 8 9 +
+            // 行 2: 7 8 9 −
             HStack(spacing: spacing) {
                 CalculatorButton(key: .digit(7), action: viewModel.handleKey)
                 CalculatorButton(key: .digit(8), action: viewModel.handleKey)
                 CalculatorButton(key: .digit(9), action: viewModel.handleKey)
-                CalculatorButton(key: .plus, action: viewModel.handleKey)
+                CalculatorButton(key: .minus, action: viewModel.handleKey)
             }
 
-            // 行 4: 4 5 6 −
+            // 行 3: 4 5 6 +
             HStack(spacing: spacing) {
                 CalculatorButton(key: .digit(4), action: viewModel.handleKey)
                 CalculatorButton(key: .digit(5), action: viewModel.handleKey)
                 CalculatorButton(key: .digit(6), action: viewModel.handleKey)
-                CalculatorButton(key: .minus, action: viewModel.handleKey)
+                CalculatorButton(key: .plus, action: viewModel.handleKey)
             }
 
-            // 行 5-6: 左侧 1 2 3 / 0 . 两行，右侧 = 纵跨两行
+            // 行 4-5: 左侧 1 2 3 / 0 . 两行，右侧 = 纵跨两行
             HStack(spacing: spacing) {
                 VStack(spacing: spacing) {
                     HStack(spacing: spacing) {
